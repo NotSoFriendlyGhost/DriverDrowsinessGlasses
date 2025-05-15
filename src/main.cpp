@@ -1,17 +1,25 @@
 #include <Arduino.h>
 #include <Wire.h>
-#include <LiquidCrystal_I2C.h>
-LiquidCrystal_I2C lcd(0x27, 16, 2);
+#include <SPI.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
 
+#define SCREEN_WIDTH 128 // OLED display width, in pixels
+#define SCREEN_HEIGHT 64 // OLED display height, in pixels
+
+#define OLED_RESET     -1 // Reset pin # (or -1 if sharing Arduino reset pin)
+#define SCREEN_ADDRESS 0x3C ///< See datasheet for Address; 0x3D for 128x64, 0x3C for 128x32
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 const int irSensorPin = 7;  // IR sensor output pin connected to digital pin 7
 const int ledPin = 13;      // LED connected to digital pin 13 (optional)
 unsigned long blinkStart;
 
 void wakeUp(){
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print("Wake up");
+  display.clearDisplay();
+  display.setCursor(0, 0);
+  display.println("Wake up");
+  display.display();
   digitalWrite(ledPin, HIGH);  // Turn on LED (optional)
   while(digitalRead(irSensorPin)==LOW){
     delay(100);
@@ -23,10 +31,16 @@ void setup() {
   pinMode(irSensorPin, INPUT);  // Set IR sensor pin as input
   pinMode(ledPin, OUTPUT);      // Set LED pin as output (optional)
   Serial.begin(9600);
-  lcd.init();
-  lcd.backlight();
-  lcd.clear();
-  lcd.setCursor(0, 0);
+
+  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { // Address 0x3D for 128x64
+    Serial.println(F("SSD1306 allocation failed"));
+    for(;;);
+  }
+  delay(2000);
+
+  display.clearDisplay();
+  display.setTextSize(2);
+  display.setTextColor(WHITE);
 }
 
 void loop() {
@@ -48,8 +62,12 @@ void loop() {
   } else {
     // No obstacle
     digitalWrite(ledPin, LOW);   // Turn off LED (optional)
-    lcd.setCursor(0, 0);
-    lcd.print("Good Boy");
   }
+
+  display.clearDisplay();
+  display.setCursor(0, 0);
+  display.println("Good stuff");
+  display.display();
+
   delay(300);  // Small delay for stability
 }
