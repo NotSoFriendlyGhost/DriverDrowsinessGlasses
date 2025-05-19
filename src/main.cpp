@@ -12,7 +12,7 @@
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 const int irSensorPin = 7;  // IR sensor output pin connected to digital pin 7
-const int ledPin = 13;      // LED connected to digital pin 13 (optional)
+const int buzzerPin = 13;
 unsigned long blinkStart;
 
 void wakeUp(){
@@ -20,7 +20,7 @@ void wakeUp(){
   display.setCursor(0, 0);
   display.println("Wake up");
   display.display();
-  digitalWrite(ledPin, HIGH);  // Turn on LED (optional)
+  digitalWrite(buzzerPin, HIGH);
   while(digitalRead(irSensorPin)==LOW){
     delay(100);
   }
@@ -28,8 +28,8 @@ void wakeUp(){
 }
 
 void setup() {
-  pinMode(irSensorPin, INPUT);  // Set IR sensor pin as input
-  pinMode(ledPin, OUTPUT);      // Set LED pin as output (optional)
+  pinMode(irSensorPin, INPUT);
+  pinMode(buzzerPin, OUTPUT);
   Serial.begin(9600);
 
   if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { // Address 0x3D for 128x64
@@ -44,9 +44,7 @@ void setup() {
 }
 
 void loop() {
-  int alcoholValue = analogRead(0);       // read alcohol sensor input
-  Serial.println(alcoholValue, DEC);  // prints the value read
-  int sensorValue = digitalRead(irSensorPin);  // Read the IR sensor value
+  int sensorValue = digitalRead(irSensorPin);
   if (sensorValue == LOW) {
     blinkStart = millis();
     while(millis()-blinkStart<2000){
@@ -58,10 +56,8 @@ void loop() {
     if(millis()-blinkStart>=2000){
       wakeUp();
     }
-    // Obstacle detected
   } else {
-    // No obstacle
-    digitalWrite(ledPin, LOW);   // Turn off LED (optional)
+    digitalWrite(buzzerPin, LOW);
   }
 
   display.clearDisplay();
@@ -69,5 +65,5 @@ void loop() {
   display.println("Good stuff");
   display.display();
 
-  delay(300);  // Small delay for stability
+  delay(300);
 }
