@@ -4,56 +4,69 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
-#define SCREEN_WIDTH 128 // OLED display width, in pixels
-#define SCREEN_HEIGHT 64 // OLED display height, in pixels
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+#define OLED_RESET     -1
+#define SCREEN_ADDRESS 0x3C
 
-#define OLED_RESET     -1 // Reset pin # (or -1 if sharing Arduino reset pin)
-#define SCREEN_ADDRESS 0x3C ///< See datasheet for Address; 0x3D for 128x64, 0x3C for 128x32
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
-const int irSensorPin = 7;  // IR sensor output pin connected to digital pin 7
+// IR sensors
+const int irSensorLeftPin = 7;   // Left eye
+const int irSensorRightPin = 8;  // Right eye
 const int buzzerPin = 13;
+
 unsigned long blinkStart;
 
-void wakeUp(){
+void wakeUp() {
   display.clearDisplay();
   display.setCursor(0, 0);
   display.println("Wake up");
   display.display();
-  digitalWrite(buzzerPin, HIGH);
-  while(digitalRead(irSensorPin)==LOW){
+  tone(buzzerPin, 1000);
+
+  // Wait until at least one eye is open
+  while (digitalRead(irSensorLeftPin) == LOW && digitalRead(irSensorRightPin) == LOW) {
     delay(100);
   }
   delay(2000);
 }
 
 void setup() {
-  pinMode(irSensorPin, INPUT);
+  pinMode(irSensorLeftPin, INPUT);
+  pinMode(irSensorRightPin, INPUT);
   pinMode(buzzerPin, OUTPUT);
   Serial.begin(9600);
 
-  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { // Address 0x3D for 128x64
+  if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
     Serial.println(F("SSD1306 allocation failed"));
-    for(;;);
+    for (;;);
   }
-  delay(2000);
 
+  delay(2000);
   display.clearDisplay();
   display.setTextSize(2);
   display.setTextColor(WHITE);
 }
 
 void loop() {
-  int sensorValue = digitalRead(irSensorPin);
-  if (sensorValue == LOW) {
+  int leftEye = digitalRead(irSensorLeftPin);
+  int rightEye = digitalRead(irSensorRightPin);
+
+  if (leftEye == LOW && rightEye == LOW) {
     blinkStart = millis();
-    while(millis()-blinkStart<2000){
-      if(digitalRead(irSensorPin)==HIGH){
+    while (millis() - blinkStart < 2000) {
+      leftEye = digitalRead(irSensorLeftPin);
+      rightEye = digitalRead(irSensorRightPin);
+
+      // Exit early if either eye opens
+      if (leftEye == HIGH || rightEye == HIGH) {
         break;
       }
       delay(100);
     }
-    if(millis()-blinkStart>=2000){
+
+    if (millis() - blinkStart >= 2000) {
       wakeUp();
     }
   } else {
