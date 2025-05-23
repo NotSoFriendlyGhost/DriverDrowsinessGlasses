@@ -12,9 +12,9 @@
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 const int irSensorLeftPin = 7;   // Left eye
-const int irSensorRightPin = 8;  // Right eye
+const int irSensorRightPin = 6;  // Right eye
 const int buzzerPin = 13;
-const int buttonPin = 6;
+const int buttonPin = 12;
 
 unsigned long blinkStart;
 bool inStaringContest = false;
@@ -52,12 +52,12 @@ void wakeUp() {
   display.setCursor(0, 0);
   display.println("Wake up");
   display.display();
-  tone(buzzerPin, 1000);
+
+  digitalWrite(buzzerPin, HIGH);
 
   while (digitalRead(irSensorLeftPin) == LOW && digitalRead(irSensorRightPin) == LOW) {
     delay(100);
   }
-  noTone(buzzerPin);
   delay(2000);
 }
 
